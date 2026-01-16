@@ -290,11 +290,15 @@ export const ProxyMonitor: React.FC<ProxyMonitorProps> = ({ className }) => {
                             return merged.slice(0, 100);
                         });
 
-                        // Fetch stats from backend instead of local calculation
+                        // Fetch stats and total count from backend instead of local calculation
                         try {
-                            const currentStats = await invoke<ProxyStats>('get_proxy_stats');
-                            if (currentStats && isMountedRef.current) {
-                                setStats(currentStats);
+                            const [currentStats, count] = await Promise.all([
+                                invoke<ProxyStats>('get_proxy_stats'),
+                                invoke<number>('get_proxy_logs_count_filtered', { filter: '', errorsOnly: false })
+                            ]);
+                            if (isMountedRef.current) {
+                                if (currentStats) setStats(currentStats);
+                                setTotalCount(count);
                             }
                         } catch (e) {
                             console.error('Failed to fetch stats:', e);
